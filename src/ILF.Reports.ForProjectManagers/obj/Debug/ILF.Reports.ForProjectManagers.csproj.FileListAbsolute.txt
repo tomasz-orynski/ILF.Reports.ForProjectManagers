@@ -1,0 +1,11 @@
+D:\Repos\Remote\GitHub\ILF.Reports.ForProjectManagers\src\ILF.Reports.ForProjectManagers\bin\Debug\ILF.Reports.ForProjectManagers.exe.config
+D:\Repos\Remote\GitHub\ILF.Reports.ForProjectManagers\src\ILF.Reports.ForProjectManagers\bin\Debug\ILF.Reports.ForProjectManagers.exe
+D:\Repos\Remote\GitHub\ILF.Reports.ForProjectManagers\src\ILF.Reports.ForProjectManagers\bin\Debug\ILF.Reports.ForProjectManagers.pdb
+D:\Repos\Remote\GitHub\ILF.Reports.ForProjectManagers\src\ILF.Reports.ForProjectManagers\obj\Debug\ILF.Reports.ForProjectManagers.csprojResolveAssemblyReference.cache
+D:\Repos\Remote\GitHub\ILF.Reports.ForProjectManagers\src\ILF.Reports.ForProjectManagers\obj\Debug\ILF.Reports.ForProjectManagers.exe
+D:\Repos\Remote\GitHub\ILF.Reports.ForProjectManagers\src\ILF.Reports.ForProjectManagers\obj\Debug\ILF.Reports.ForProjectManagers.pdb
+D:\Repos\Remote\GitHub\ILF.Reports.ForProjectManagers\src\ILF.Reports.ForProjectManagers\bin\Debug\MoreLinq.dll
+D:\Repos\Remote\GitHub\ILF.Reports.ForProjectManagers\src\ILF.Reports.ForProjectManagers\bin\Debug\System.ValueTuple.dll
+D:\Repos\Remote\GitHub\ILF.Reports.ForProjectManagers\src\ILF.Reports.ForProjectManagers\bin\Debug\MoreLinq.xml
+D:\Repos\Remote\GitHub\ILF.Reports.ForProjectManagers\src\ILF.Reports.ForProjectManagers\bin\Debug\EPPlus.dll
+D:\Repos\Remote\GitHub\ILF.Reports.ForProjectManagers\src\ILF.Reports.ForProjectManagers\bin\Debug\EPPlus.xml
