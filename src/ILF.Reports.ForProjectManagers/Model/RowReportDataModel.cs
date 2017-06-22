@@ -18,6 +18,8 @@
         /// I: Total MH
         /// </summary>
         public decimal F { get; set; }
+
+        public bool ToSkip => A == 0 && B == 0 && F == 0;
     }
 
     public class RowReportProjDataModel

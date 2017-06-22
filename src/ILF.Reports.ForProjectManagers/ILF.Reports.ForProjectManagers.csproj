@@ -64,6 +64,8 @@
     <Compile Include="Model\TeamMemberModel.cs" />
     <Compile Include="Model\TeamModel.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="Program.ReadData.cs" />
+    <Compile Include="Program.WriteData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
