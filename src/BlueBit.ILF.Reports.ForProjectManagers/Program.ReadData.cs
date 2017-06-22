@@ -1,5 +1,5 @@
-﻿using ILF.Reports.ForProjectManagers.Diagnostics;
-using ILF.Reports.ForProjectManagers.Model;
+﻿using BlueBit.ILF.Reports.ForProjectManagers.Diagnostics;
+using BlueBit.ILF.Reports.ForProjectManagers.Model;
 using MoreLinq;
 using OfficeOpenXml;
 using System;
@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ILF.Reports.ForProjectManagers
+namespace BlueBit.ILF.Reports.ForProjectManagers
 {
     partial class Program
     {

@@ -1,10 +1,10 @@
-﻿using ILF.Reports.ForProjectManagers.Diagnostics;
+﻿using BlueBit.ILF.Reports.ForProjectManagers.Diagnostics;
 using NLog;
 using System;
 using System.Diagnostics;
 using System.IO;
 
-namespace ILF.Reports.ForProjectManagers
+namespace BlueBit.ILF.Reports.ForProjectManagers
 {
     partial class Program
     {

@@ -1,4 +1,4 @@
-﻿namespace ILF.Reports.ForProjectManagers.Model
+﻿namespace BlueBit.ILF.Reports.ForProjectManagers.Model
 {
     public class RowDataModel
     {

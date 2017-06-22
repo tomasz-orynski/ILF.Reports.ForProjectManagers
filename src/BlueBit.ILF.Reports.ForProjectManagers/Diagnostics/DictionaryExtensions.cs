@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ILF.Reports.ForProjectManagers.Diagnostics
+namespace BlueBit.ILF.Reports.ForProjectManagers.Diagnostics
 {
     public static class DictionaryExtensions
     {
