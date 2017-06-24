@@ -72,20 +72,22 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
             Contract.Assert(action != null);
 
             var sheet = workbook.Worksheets[sheetName].CheckNotNull();
+            _logger.Info($"READ BEG: [{sheetName}] at row #[{firstRow}] by column #[{byColumn}].");
             for (;;)
             {
                 var value = sheet.GetValue<string>(firstRow, byColumn).NullTrim();
                 if (string.IsNullOrEmpty(value)) break;
                 action(sheet, firstRow++, value);
             }
+            _logger.Info($"READ END: [{sheetName}] at row #{firstRow}.");
         }
 
         private static void ReadReportData_Params(ReportModel model, ExcelWorkbook workbook)
             => _logger.OnEntryCall(() =>
             {
                 var sheet = workbook.Worksheets["_REPORT_"].CheckNotNull();
-                model.DtStart = Convert.ToDateTime(sheet.GetValue(3, 3));
-                model.DtEnd = Convert.ToDateTime(sheet.GetValue(4, 3));
+                model.DtStart = Convert.ToDateTime(sheet.GetValue(3, 3)).Date;
+                model.DtEnd = Convert.ToDateTime(sheet.GetValue(4, 3)).Date;
             });
 
         private static void ReadReportData_Projects(ReportModel model, ExcelWorkbook workbook)
@@ -127,7 +129,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
             {
                 var teamMembers = model.Teams.ToDictionary(_ => _.DivisionName, _ => _.Members);
                 OnReadSheet(workbook, "Project Team Members", 2, 1, (sheet, row, name) => {
-                    var division = sheet.GetValue<string>(row, 2).NullTrim();
+                    var division = sheet.GetValue<string>(row, 3).NullTrim();
                     teamMembers.IfExistsValue(division, members => members.Add(new TeamMemberModel()
                     {
                         Name = name,
@@ -170,7 +172,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
         private static void ReadReportData_Utilised_MH_and_Cost_TS(ReportModel model, ExcelWorkbook workbook)
             => _logger.OnEntryCall(() =>
             {
-                OnReadSheet(workbook, "Utilised MH&Cost_TS", 3, 5, (sheet, row, employee) => {
+                OnReadSheet(workbook, "Utilised MH&Cost_TS", 7, 5, (sheet, row, employee) => {
                     var division = sheet.GetValue<string>(row, 12).NullTrim();
                     var project = sheet.GetValue<string>(row, 8).NullTrim();
 
@@ -184,8 +186,8 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                     if (dt <= model.DtEnd)
                         model._RowsDivProj.IfExistsValue((division, project), rowData =>
                         {
-                            rowData.Hours.I += sheet.GetValue<decimal?>(row, 7) ?? 0m;
-                            rowData.Costs.I += sheet.GetValue<decimal?>(row, 10) ?? 0m;
+                            rowData.Hours.F += sheet.GetValue<decimal?>(row, 7) ?? 0m;
+                            rowData.Costs.F += sheet.GetValue<decimal?>(row, 10) ?? 0m;
                         });
                 });
             });
@@ -196,11 +198,10 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                 var dtiStart = model.GetDtiStart();
                 var dtiEnd = model.GetDtiEnd();
                 OnReadSheet(workbook, "Planned_Actual_Comparison", 6, 4, (sheet, row, employee) => {
-                    var division = sheet.GetValue<string>(++row, 12).NullTrim();
-                    var project = sheet.GetValue<string>(++row, 8).NullTrim();
+                    var division = sheet.GetValue<string>(row, 12).NullTrim();
+                    var project = sheet.GetValue<string>(row, 1).NullTrim();
 
                     var dti = sheet.GetValue<long>(row, 8);
-                    var dt = sheet.GetValue<DateTime>(row, 1);
                     if (dti >= dtiStart && dti <= dtiEnd)
                         model._RowsDivProjEmpl.IfExistsValue((division, project, employee), rowData =>
                         {
@@ -216,16 +217,15 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                 var dtiStart = model.GetDtiStart();
                 var dtiEnd = model.GetDtiEnd();
                 OnReadSheet(workbook, "Planned_Actual_Compare Estimate", 6, 4, (sheet, row, employee) => {
-                    var division = sheet.GetValue<string>(++row, 12).NullTrim();
-                    var project = sheet.GetValue<string>(++row, 1).NullTrim();
+                    var division = sheet.GetValue<string>(row, 12).NullTrim();
+                    var project = sheet.GetValue<string>(row, 1).NullTrim();
 
                     var dti = sheet.GetValue<long>(row, 8);
-                    var dt = sheet.GetValue<DateTime>(row, 1);
                     if (dti >= dtiStart)
                         model._RowsDivProjEmpl.IfExistsValue((division, project, employee), rowData =>
                         {
-                            rowData.Hours.F += sheet.GetValue<decimal?>(row, 9) ?? 0m;
-                            rowData.Costs.F += sheet.GetValue<decimal?>(row, 14) ?? 0m;
+                            rowData.Hours.I += sheet.GetValue<decimal?>(row, 9) ?? 0m;
+                            rowData.Costs.I += sheet.GetValue<decimal?>(row, 14) ?? 0m;
                         });
                 });
             });

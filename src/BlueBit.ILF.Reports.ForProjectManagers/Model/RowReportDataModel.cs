@@ -17,11 +17,11 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Model
         /// </summary>
         public decimal E { get; set; }
         /// <summary>
-        /// I: Total MH
+        /// L: Estimate
         /// </summary>
-        public decimal F { get; set; }
+        public decimal I { get; set; }
 
-        public bool HasValues => A != 0 || B != 0 || F != 0;
+        public bool HasValues => A != 0 || B != 0 || I != 0;
 
         public void Aggregate(RowReportDataModel other)
         {
@@ -29,15 +29,15 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Model
             A += other.A;
             B += other.B;
             E += other.E;
-            F += other.F;
+            I += other.I;
         }
     }
 
     public class RowReportProjDataModel
     {
         /// <summary>
-        /// L: Estimate
+        /// I: Total MH
         /// </summary>
-        public decimal I { get; set; }
+        public decimal F { get; set; }
     }
 }

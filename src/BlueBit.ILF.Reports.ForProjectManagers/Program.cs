@@ -1,4 +1,5 @@
 ﻿using BlueBit.ILF.Reports.ForProjectManagers.Diagnostics;
+using BlueBit.ILF.Reports.ForProjectManagers.Model;
 using NLog;
 using System;
 using System.Diagnostics;
@@ -38,6 +39,20 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                 Debug.Assert(File.Exists(pathInputTemplateXlsm));
 
                 var model = ReadReportData(pathInputDataXlsx);
+                /*
+                var model = new ReportModel()
+                {
+                    DtStart = DateTime.Now,
+                    DtEnd = DateTime.Now,
+                };
+                model.Teams.Add(new TeamModel() {
+                    DivisionLeader = "leader",
+                    DivisionName = "name",
+                    SaveEmailPath = "path",
+                });
+                */
+
+
                 var result = WriteReportData(model, pathInputTemplateXlsm, pathOutput);
                 //TODO-TO: create email...
             });
