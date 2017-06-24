@@ -29,16 +29,17 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                     : @".\data");
                 var pathInput = Path.Combine(path, "input");
                 var pathInputDataXlsx = Path.Combine(pathInput, "data.xlsx");
-                var pathInputTemplateXltm = Path.Combine(pathInput, "template.xltm");
+                var pathInputTemplateXlsm = Path.Combine(pathInput, "template.xlsm");
                 var pathOutput = Path.Combine(path, "output");
 
                 Debug.Assert(Directory.Exists(pathInput));
                 Debug.Assert(Directory.Exists(pathOutput));
                 Debug.Assert(File.Exists(pathInputDataXlsx));
-                Debug.Assert(File.Exists(pathInputTemplateXltm));
+                Debug.Assert(File.Exists(pathInputTemplateXlsm));
 
                 var model = ReadReportData(pathInputDataXlsx);
-                WriteReportData(model, pathInputTemplateXltm, pathOutput);
+                var result = WriteReportData(model, pathInputTemplateXlsm, pathOutput);
+                //TODO-TO: create email...
             });
 
     }

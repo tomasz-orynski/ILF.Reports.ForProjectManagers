@@ -3,6 +3,8 @@ using BlueBit.ILF.Reports.ForProjectManagers.Model;
 using MoreLinq;
 using OfficeOpenXml;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -63,6 +65,21 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                 }
             });
 
+
+        private static void OnReadSheet(ExcelWorkbook workbook, string sheetName, int firstRow, int byColumn, Action<ExcelWorksheet, int, string> action)
+        {
+            Contract.Assert(workbook != null);
+            Contract.Assert(action != null);
+
+            var sheet = workbook.Worksheets[sheetName].CheckNotNull();
+            for (;;)
+            {
+                var value = sheet.GetValue<string>(firstRow, byColumn).NullTrim();
+                if (string.IsNullOrEmpty(value)) break;
+                action(sheet, firstRow++, value);
+            }
+        }
+
         private static void ReadReportData_Params(ReportModel model, ExcelWorkbook workbook)
             => _logger.OnEntryCall(() =>
             {
@@ -74,25 +91,18 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
         private static void ReadReportData_Projects(ReportModel model, ExcelWorkbook workbook)
             => _logger.OnEntryCall(() =>
             {
-                var sheet = workbook.Worksheets["Projects"].CheckNotNull();
-                var row = 1;
-                while (true)
-                {
-                    var name = sheet.GetValue<string>(++row, 1).NullTrim();
-                    if (string.IsNullOrEmpty(name)) return;
-                    model.Projects.Add(name);
-                }
+                var projects = new List<string>();
+                OnReadSheet(workbook, "Projects", 2, 1, (sheet, row, name) => {
+                    projects.Add(name);
+                });
+                projects.Sort();
+                model.Projects = projects;
             });
 
         private static void ReadReportData_ProjectTeams(ReportModel model, ExcelWorkbook workbook)
             => _logger.OnEntryCall(() =>
             {
-                var sheet = workbook.Worksheets["Project Teams"].CheckNotNull(); ;
-                var row = 1;
-                while (true)
-                {
-                    var name = sheet.GetValue<string>(++row, 1).NullTrim();
-                    if (string.IsNullOrEmpty(name)) break;
+                OnReadSheet(workbook, "Project Teams", 2, 1, (sheet, row, name) => {
                     model.Teams.Add(new TeamModel()
                     {
                         DivisionName = name,
@@ -106,8 +116,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
 
                         ProjectRows = model.Projects.ToDictionary(_ => _, _ => new RowProjDataModel()),
                     });
-                }
-
+                });
                 model._RowsDivProj = model.Teams
                     .SelectMany(t => t.ProjectRows.Select(r => new { t.DivisionName, ProjectName = r.Key, Row = r.Value }))
                     .ToDictionary(_ => (_.DivisionName, _.ProjectName), _ => _.Row);
@@ -116,22 +125,15 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
         private static void ReadReportData_ProjectTeamMembers(ReportModel model, ExcelWorkbook workbook)
             => _logger.OnEntryCall(() =>
             {
-                var sheet = workbook.Worksheets["Project Team Members"].CheckNotNull();
-                var row = 1;
                 var teamMembers = model.Teams.ToDictionary(_ => _.DivisionName, _ => _.Members);
-                while (true)
-                {
-                    var name = sheet.GetValue<string>(++row, 1).NullTrim();
-                    if (string.IsNullOrEmpty(name)) break;
-                    var division = sheet.GetValue<string>(++row, 2).NullTrim();
-
+                OnReadSheet(workbook, "Project Team Members", 2, 1, (sheet, row, name) => {
+                    var division = sheet.GetValue<string>(row, 2).NullTrim();
                     teamMembers.IfExistsValue(division, members => members.Add(new TeamMemberModel()
                     {
                         Name = name,
                         ProjectRows = model.Projects.ToDictionary(_ => _, _ => new RowDataModel()),
                     }));
-                }
-
+                });
                 model._RowsDivProjEmpl = model.Teams
                     .SelectMany(t => t.Members
                         .SelectMany(m => m.ProjectRows.Select(r => new { t.DivisionName, ProjectName = r.Key, EmployeeName = m.Name, Row = r.Value })))
@@ -141,52 +143,36 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
         private static void ReadReportData_PMT02_MH_at_start(ReportModel model, ExcelWorkbook workbook)
             => _logger.OnEntryCall(() =>
             {
-                var sheet = workbook.Worksheets["PMT02_MH_at start"].CheckNotNull();
-                var row = 2;
-                while (true)
-                {
-                    var employee = sheet.GetValue<string>(++row, 1).NullTrim();
-                    if (string.IsNullOrEmpty(employee)) return;
-                    var division = sheet.GetValue<string>(++row, 2).NullTrim();
-                    var project = sheet.GetValue<string>(++row, 6).NullTrim();
-
+                OnReadSheet(workbook, "PMT02_MH_at start", 3, 1, (sheet, row, employee) => {
+                    var division = sheet.GetValue<string>(row, 2).NullTrim();
+                    var project = sheet.GetValue<string>(row, 6).NullTrim();
                     model._RowsDivProjEmpl.IfExistsValue((division, project, employee), rowData =>
                     {
                         rowData.Hours.E += sheet.GetValue<decimal?>(row, 7) ?? 0m;
                     });
-                }
+                });
             });
 
         private static void ReadReportData_PMT02_Cost_at_start(ReportModel model, ExcelWorkbook workbook)
             => _logger.OnEntryCall(() =>
             {
-                var sheet = workbook.Worksheets["PMT02_Cost_at start"].CheckNotNull();
-                var row = 2;
-                while (true)
-                {
-                    var employee = sheet.GetValue<string>(++row, 1).NullTrim();
-                    if (string.IsNullOrEmpty(employee)) return;
-                    var division = sheet.GetValue<string>(++row, 2).NullTrim();
-                    var project = sheet.GetValue<string>(++row, 6).NullTrim();
+                OnReadSheet(workbook, "PMT02_Cost_at start", 3, 1, (sheet, row, employee) => {
+                    var division = sheet.GetValue<string>(row, 2).NullTrim();
+                    var project = sheet.GetValue<string>(row, 6).NullTrim();
 
                     model._RowsDivProjEmpl.IfExistsValue((division, project, employee), rowData =>
                     {
                         rowData.Costs.E += sheet.GetValue<decimal?>(row, 7) ?? 0m;
                     });
-                }
+                });
             });
 
         private static void ReadReportData_Utilised_MH_and_Cost_TS(ReportModel model, ExcelWorkbook workbook)
             => _logger.OnEntryCall(() =>
             {
-                var sheet = workbook.Worksheets["Utilised MH&Cost_TS"].CheckNotNull();
-                var row = 2;
-                while (true)
-                {
-                    var employee = sheet.GetValue<string>(++row, 5).NullTrim();
-                    if (string.IsNullOrEmpty(employee)) return;
-                    var division = sheet.GetValue<string>(++row, 12).NullTrim();
-                    var project = sheet.GetValue<string>(++row, 8).NullTrim();
+                OnReadSheet(workbook, "Utilised MH&Cost_TS", 3, 5, (sheet, row, employee) => {
+                    var division = sheet.GetValue<string>(row, 12).NullTrim();
+                    var project = sheet.GetValue<string>(row, 8).NullTrim();
 
                     var dt = sheet.GetValue<DateTime>(row, 1);
                     if (dt >= model.DtStart && dt <= model.DtEnd)
@@ -201,20 +187,15 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                             rowData.Hours.I += sheet.GetValue<decimal?>(row, 7) ?? 0m;
                             rowData.Costs.I += sheet.GetValue<decimal?>(row, 10) ?? 0m;
                         });
-                }
+                });
             });
 
         private static void ReadReportData_Planned_Actual_Comparison(ReportModel model, ExcelWorkbook workbook)
             => _logger.OnEntryCall(() =>
             {
-                var sheet = workbook.Worksheets["Planned_Actual_Comparison"].CheckNotNull();
-                var row = 5;
                 var dtiStart = model.GetDtiStart();
                 var dtiEnd = model.GetDtiEnd();
-                while (true)
-                {
-                    var employee = sheet.GetValue<string>(++row, 4).NullTrim();
-                    if (string.IsNullOrEmpty(employee)) return;
+                OnReadSheet(workbook, "Planned_Actual_Comparison", 6, 4, (sheet, row, employee) => {
                     var division = sheet.GetValue<string>(++row, 12).NullTrim();
                     var project = sheet.GetValue<string>(++row, 8).NullTrim();
 
@@ -226,20 +207,15 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                             rowData.Hours.A += sheet.GetValue<decimal?>(row, 9) ?? 0m;
                             rowData.Costs.A += sheet.GetValue<decimal?>(row, 14) ?? 0m;
                         });
-                }
+                });
             });
 
         private static void ReadReportData_Planned_Actual_Compare_Estimate(ReportModel model, ExcelWorkbook workbook)
             => _logger.OnEntryCall(() =>
             {
-                var sheet = workbook.Worksheets["Planned_Actual_Compare Estimate"].CheckNotNull();
-                var row = 5;
                 var dtiStart = model.GetDtiStart();
                 var dtiEnd = model.GetDtiEnd();
-                while (true)
-                {
-                    var employee = sheet.GetValue<string>(++row, 4).NullTrim();
-                    if (string.IsNullOrEmpty(employee)) return;
+                OnReadSheet(workbook, "Planned_Actual_Compare Estimate", 6, 4, (sheet, row, employee) => {
                     var division = sheet.GetValue<string>(++row, 12).NullTrim();
                     var project = sheet.GetValue<string>(++row, 1).NullTrim();
 
@@ -251,7 +227,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                             rowData.Hours.F += sheet.GetValue<decimal?>(row, 9) ?? 0m;
                             rowData.Costs.F += sheet.GetValue<decimal?>(row, 14) ?? 0m;
                         });
-                }
+                });
             });
     }
 }

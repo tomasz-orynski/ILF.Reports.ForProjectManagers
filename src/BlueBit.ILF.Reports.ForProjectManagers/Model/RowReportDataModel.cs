@@ -1,4 +1,6 @@
-﻿namespace BlueBit.ILF.Reports.ForProjectManagers.Model
+﻿using System.Diagnostics.Contracts;
+
+namespace BlueBit.ILF.Reports.ForProjectManagers.Model
 {
     public class RowReportDataModel
     {
@@ -19,7 +21,16 @@
         /// </summary>
         public decimal F { get; set; }
 
-        public bool ToSkip => A == 0 && B == 0 && F == 0;
+        public bool HasValues => A != 0 || B != 0 || F != 0;
+
+        public void Aggregate(RowReportDataModel other)
+        {
+            Contract.Assert(other != null);
+            A += other.A;
+            B += other.B;
+            E += other.E;
+            F += other.F;
+        }
     }
 
     public class RowReportProjDataModel
