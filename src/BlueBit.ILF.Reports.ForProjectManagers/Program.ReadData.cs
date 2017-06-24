@@ -79,7 +79,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                 if (string.IsNullOrEmpty(value)) break;
                 action(sheet, firstRow++, value);
             }
-            _logger.Info($"READ END: [{sheetName}] at row #{firstRow}.");
+            _logger.Info($"READ END: [{sheetName}] at row #[{firstRow}].");
         }
 
         private static void ReadReportData_Params(ReportModel model, ExcelWorkbook workbook)

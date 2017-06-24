@@ -48,17 +48,21 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
 
         public abstract int Generate(int row);
 
+        protected SpreadsheetDocument _document;
+        protected Workbook _workbook;
+        protected Worksheet _worksheet;
         protected SheetData _sheetData;
-        
 
         public void SetDocument(SpreadsheetDocument document)
         {
-            var workbook = document.WorkbookPart.Workbook;
-            var sheet = workbook.GetFirstChild<Sheets>()
+            _document = document;
+            _workbook = _document.WorkbookPart.Workbook;
+            var sheet = _workbook.GetFirstChild<Sheets>()
                 .Elements<Sheet>()
                 .Single(_ => _.Name == SheetName);
             var worksheetPart = (WorksheetPart)document.WorkbookPart.GetPartById(sheet.Id);
-            _sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>().CheckNotNull();
+            _worksheet = worksheetPart.Worksheet;
+            _sheetData = _worksheet.GetFirstChild<SheetData>().CheckNotNull();
         }
 
         protected List<Row> CopyRow(int rowSrc, int rowDst, int rowCnt)

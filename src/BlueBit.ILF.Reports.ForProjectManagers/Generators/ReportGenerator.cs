@@ -39,6 +39,20 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
         public override int Generate(int row)
         {
             row += CopyRow(RowEmpty, row, 1).Count;
+
+            var props = _workbook.CalculationProperties;
+            props.ForceFullCalculation = true;
+            props.FullCalculationOnLoad = true;
+
+            _sheetData
+                .SelectMany(data => data.Elements<Row>())
+                .SelectMany(_ => _.Elements<Cell>())
+                .Where(_ => _.CellFormula != null && _.CellValue != null)
+                .ToList()
+                .ForEach(_ => _.CellValue.Remove());
+
+            _worksheet.SheetFormatProperties.OutlineLevelRow = 1;
+
             return row;
         }
     }
@@ -99,6 +113,10 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
                 {
                     var memberData = projectData.MembersData[memIdx];
                     var dstRow = CopyRowData(row, projIdx == 0 && memIdx == 0 ? RowDataType.First : RowDataType.Next);
+                    //SetOutlineLevel(dstRow, 2);
+                    dstRow.OutlineLevel = 2;
+                    dstRow.Collapsed = true;
+                    dstRow.Hidden = true;
                     SetCellValue(dstRow, ColumnNo.ProjNo, projectData.Name);
                     SetCellValue(dstRow, ColumnNo.Employee, memberData.Name);
                     SetCellValue(dstRow, ColumnNo.A, memberData.Data.A);
@@ -111,6 +129,8 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
                 }
                 {
                     var dstRow = CopyRowSum(row, projIdx == data.Count - 1 ? RowSumType.Last : RowSumType.Prev);
+                    //SetOutlineLevel(dstRow, 1);
+                    dstRow.OutlineLevel = 1;
                     SetCellValue(dstRow, ColumnNo.ProjNo, $"Total {projectData.Name}");
                     SetCellValue(dstRow, ColumnNo.A, projectRowSum.A);
                     SetCellValue(dstRow, ColumnNo.B, projectRowSum.B);
@@ -136,6 +156,9 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
             => CopyRow((int)(TemplateRowStart + HeaderRowsCount + type), row, 1)[0];
         private Row CopyRowSum(int row, RowSumType type)
             => CopyRow((int)(TemplateRowStart + HeaderRowsCount + 2 + type), row, 1)[0];
+
+        private void SetOutlineLevel(Row row, int level)
+            => row.SetAttribute(new DocumentFormat.OpenXml.OpenXmlAttribute("outlineLevel", string.Empty, level.ToString()));
 
         private static string Formula_C => "MAX(D{0}-E{0}, 0)";
         private static string Formula_D => "IF(D{0}=0,0,ABS(E{0}/D{0}))";
