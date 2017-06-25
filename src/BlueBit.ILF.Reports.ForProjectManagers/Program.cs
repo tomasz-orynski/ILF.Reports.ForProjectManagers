@@ -4,6 +4,7 @@ using NLog;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 
 namespace BlueBit.ILF.Reports.ForProjectManagers
 {
@@ -16,6 +17,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
             MakeReport(args);
             if (Debugger.IsAttached)
             {
+                Thread.Sleep(1000);
                 Console.WriteLine("Press enter key...");
                 Console.ReadLine();
             }
@@ -44,7 +46,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
 
 
                 var result = WriteReportData(model, pathInputTemplateXlsm, pathOutput);
-                //TODO-TO: create email...
+                SendReportData(result);
             });
 
 

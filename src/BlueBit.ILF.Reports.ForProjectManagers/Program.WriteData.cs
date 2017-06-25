@@ -24,7 +24,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
         }
 
 
-        private static List<(string path, string title, string info)> WriteReportData(ReportModel model, string pathInputTemplateXlsm, string pathOutput)
+        private static List<(string id, string path, string title, string info, string addr)> WriteReportData(ReportModel model, string pathInputTemplateXlsm, string pathOutput)
             => _logger.OnEntryCall(() =>
                 model.Teams
                     .AsParallel()
@@ -56,11 +56,13 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
 
                         _logger.Info($"WRITE END: #[{id}] - total rows #[{row}].");
                         return (
+                            id,
                             path,
                             $"Raport dla kierownika pionu { team.DivisionLeader } za okres { model.DtStart.ToString("yyyyMMdd") } - { model.DtEnd.ToString("yyyyMMdd") }",
                             $"W załączeniu raport za okres od { model.DtStart.ToString("yyyy-MM-dd") }  do { model.DtEnd.ToString("yyyy -MM-dd") } dla { team.DivisionLeader }."
                                 + Environment.NewLine
-                                + "Proszę o akceptację zestawienia przy użyciu przycisku 'confirmed' w załączonym pliku oraz wpisywanie swoich uwag."
+                                + "Proszę o akceptację zestawienia przy użyciu przycisku 'confirmed' w załączonym pliku oraz wpisywanie swoich uwag.",
+                                team.DivisionLeaderEmail
                             );
                     })
                     .ToList()
