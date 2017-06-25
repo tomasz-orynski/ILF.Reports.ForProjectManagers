@@ -95,10 +95,9 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
             {
                 var projects = new List<string>();
                 OnReadSheet(workbook, "Projects", 2, 1, (sheet, row, name) => {
-                    projects.Add(name);
+                    model.Projects.Add(name);
                 });
-                projects.Sort();
-                model.Projects = projects;
+                model.Projects.Sort();
             });
 
         private static void ReadReportData_ProjectTeams(ReportModel model, ExcelWorkbook workbook)

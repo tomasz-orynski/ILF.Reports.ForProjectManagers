@@ -1,5 +1,6 @@
 ﻿using BlueBit.ILF.Reports.ForProjectManagers.Diagnostics;
 using BlueBit.ILF.Reports.ForProjectManagers.Model;
+using BlueBit.ILF.Reports.ForProjectManagers.Utils;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MoreLinq;
@@ -19,7 +20,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
         protected const int RowCountBetweenReports = 2;
         protected const string SheetName = "Report";
 
-        protected static class ColumnNo
+        protected static class LogicColumn
         {
             public const int First = 2;
             public const int Last = 15;
@@ -40,7 +41,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
         }
 
 
-        public Templates Templates { get; set; }
+        public Template Templates { get; set; }
         public ReportModel Report { get; set; }
         public TeamModel Team { get; set; }
 
@@ -49,37 +50,49 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
         public abstract int Generate(int row);
 
         protected SpreadsheetDocument _document;
+        protected WorkbookPart _workbookPart;
         protected Workbook _workbook;
         protected Worksheet _worksheet;
         protected SheetData _sheetData;
+        protected MergeCells _mergeCells;
+        //protected CalculationChain _calculationChain;
 
         public void SetDocument(SpreadsheetDocument document)
         {
             _document = document;
-            _workbook = _document.WorkbookPart.Workbook;
+            _workbookPart = _document.WorkbookPart;
+            _workbook = _workbookPart.Workbook;
+
             var sheet = _workbook.GetFirstChild<Sheets>()
                 .Elements<Sheet>()
                 .Single(_ => _.Name == SheetName);
             var worksheetPart = (WorksheetPart)document.WorkbookPart.GetPartById(sheet.Id);
             _worksheet = worksheetPart.Worksheet;
             _sheetData = _worksheet.GetFirstChild<SheetData>().CheckNotNull();
+            _mergeCells = _worksheet.Elements<MergeCells>().Single();
         }
 
-        protected List<Row> CopyRow(int rowSrc, int rowDst, int rowCnt)
+        protected List<Row> CopyRow(int rowSrc, int rowDst, int rowCnt, bool handleMergeCells = false)
         {
             var list = new List<Row>();
             for (var rowIdx = 0; rowIdx < rowCnt; ++rowIdx)
             {
-                var dst = (Row)Templates.Rows[rowSrc + rowIdx].CloneNode(true); 
-                dst.RowIndex.Value = (uint)(rowDst + rowIdx);
+                var srcIdx = rowSrc + rowIdx;
+                var dstIdx = rowDst + rowIdx;
+                var dst = (Row)Templates.Rows[srcIdx].CloneNode(true); 
+                dst.RowIndex.Value = (uint)dstIdx;
                 dst.Elements<Cell>()
                     .ForEach(cell =>
                     {
-                        var cellIdx = SplitCellRef(cell.CellReference.Value);
-                        cell.CellReference.Value = cellIdx.col + dst.RowIndex.Value.ToString();
+                        var cellRef = cell.CellReference.Value.SplitSingleToRef();
+                        cell.CellReference.Value = cellRef.colRef + dst.RowIndex.Value.ToString();
                     });
 
                 _sheetData.Append(dst);
+                if (handleMergeCells)
+                    Templates.AddMergedCellsTo(srcIdx, dstIdx)
+                        .ForEach(_ => _mergeCells.AppendChild(_));
+
                 list.Add(dst);
             }
             return list;
@@ -93,13 +106,13 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
             .Elements<Cell>()
             .Single(_ => _.CellReference.Value == colRef);
         private Cell GetCell(int row, int col)
-            => GetCell(row, GetColumnRef(col));
+            => GetCell(row, col.GetColumnRef());
 
 
         protected void SetCellValue(Row row, int col, string value)
         {
             var cell = row.Descendants<Cell>()
-                .Single(_ => GetColumnIndex(SplitCellRef(_.CellReference.Value).col) == col);
+                .Single(_ => _.CellReference.Value.SplitSingleToRef().colRef.GetColumnIdx() == col);
             cell.DataType = CellValues.InlineString;
             cell.InlineString = new InlineString(new Text { Text = value });
         }
@@ -127,7 +140,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
         protected void SetCellValue(Row row, int col, Decimal value)
         {
             var cell = row.Descendants<Cell>()
-                .Single(_ => GetColumnIndex(SplitCellRef(_.CellReference.Value).col) == col);
+                .Single(_ => _.CellReference.Value.SplitSingleToRef().colRef.GetColumnIdx() == col);
             cell.DataType = CellValues.Number;
             cell.CellValue = new CellValue(value.ToString());
         }
@@ -135,52 +148,13 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
         protected void SetCellFormula(Row row, int col, string formula)
         {
             var cell = row.Descendants<Cell>()
-                .Single(_ => GetColumnIndex(SplitCellRef(_.CellReference.Value).col) == col);
+                .Single(_ => _.CellReference.Value.SplitSingleToRef().colRef.GetColumnIdx() == col);
             cell.DataType = CellValues.Number;
             cell.CellFormula = new CellFormula()
             {
                 Text = string.Format(formula, row.RowIndex.Value),
             };
         }
-
-        private static string GetA1Range(int startRow, int startColumn, int endRow, int endColumn)
-            => GetColumnRef(startColumn) + startRow.ToString() + ":" + GetColumnRef(endColumn) + endRow.ToString();
-
-        private static string GetColumnRef(int columnIndex)
-        {
-            int dividend = columnIndex;
-            string columnName = String.Empty;
-            int modulo;
-
-            while (dividend > 0)
-            {
-                modulo = (dividend - 1) % 26;
-                columnName = Convert.ToChar(65 + modulo).ToString() + columnName;
-                dividend = (int)((dividend - modulo) / 26);
-            }
-            return columnName;
-        }
-
-        protected int GetColumnIndex(string reference)
-        {
-            int ci = 0;
-            reference = reference.ToUpper();
-            for (int ix = 0; ix < reference.Length && reference[ix] >= 'A'; ix++)
-                ci = (ci * 26) + ((int)reference[ix] - 64);
-            return ci;
-        }
-
-        protected (string row, string col) SplitCellRef(string reference)
-            => (string.Concat(reference.Where(char.IsDigit)), string.Concat(reference.Where(char.IsLetter)));
-
-        protected (int row, int col) GetCellIndex(string reference)
-        {
-            var splitedRef = SplitCellRef(reference);
-            return (Convert.ToInt32(splitedRef.row), GetColumnIndex(splitedRef.col));
-        }
-
-        protected string GetCellRef(int row, int col)
-            => GetColumnRef(col) + row.ToString();
 
     }
 }

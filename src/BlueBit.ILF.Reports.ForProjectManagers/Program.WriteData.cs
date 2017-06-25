@@ -40,7 +40,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                         using (var document = SpreadsheetDocument.Open(path, true))
                         {
 
-                            var templates = new Templates();
+                            var templates = new Template();
                             GetGenerators()
                                 .ForEach(generator =>
                                 {

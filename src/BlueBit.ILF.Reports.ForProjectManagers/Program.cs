@@ -38,24 +38,31 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                 Debug.Assert(File.Exists(pathInputDataXlsx));
                 Debug.Assert(File.Exists(pathInputTemplateXlsm));
 
-                var model = ReadReportData(pathInputDataXlsx);
-                /*
-                var model = new ReportModel()
-                {
-                    DtStart = DateTime.Now,
-                    DtEnd = DateTime.Now,
-                };
-                model.Teams.Add(new TeamModel() {
-                    DivisionLeader = "leader",
-                    DivisionName = "name",
-                    SaveEmailPath = "path",
-                });
-                */
+                var model = true //You can skip read from file...
+                    ? ReadReportData(pathInputDataXlsx)
+                    : MakeDummyReportModel();
 
 
                 var result = WriteReportData(model, pathInputTemplateXlsm, pathOutput);
                 //TODO-TO: create email...
             });
+
+
+        private static ReportModel MakeDummyReportModel()
+        {
+            var model = new ReportModel()
+            {
+                DtStart = DateTime.Now,
+                DtEnd = DateTime.Now,
+            };
+            model.Teams.Add(new TeamModel()
+            {
+                DivisionLeader = "leader",
+                DivisionName = "name",
+                SaveEmailPath = "path",
+            });
+            return model;
+        }
 
     }
 }

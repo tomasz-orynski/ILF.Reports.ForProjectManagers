@@ -1,11 +1,8 @@
 ﻿using BlueBit.ILF.Reports.ForProjectManagers.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DocumentFormat.OpenXml.Packaging;
+using BlueBit.ILF.Reports.ForProjectManagers.Utils;
 using DocumentFormat.OpenXml.Spreadsheet;
+using MoreLinq;
+using System.Linq;
 
 namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
 {
@@ -13,14 +10,45 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
     {
         public override int Generate(int row)
         {
-            Templates.Rows = _sheetData.Elements<Row>()
-                .Where(_ => _.RowIndex.Value >= RowStart && _.RowIndex.Value < 50)
-                .ToDictionary(_ => (int)_.RowIndex.Value, _ => (Row)_.CloneNode(true));
-
-            _sheetData.Elements<Row>()
+            var rows = _sheetData.Elements<Row>()
                 .Where(_ => _.RowIndex.Value >= RowStart)
-                .ToList()
-                .ForEach(_ => _.Remove());
+                .ToDictionary(_ => (int)_.RowIndex.Value, _ => _);
+
+            var mergedCells = _mergeCells.Cast<MergeCell>()
+                .Select(_ => new {
+                    MergeCell = _,
+                    Rows = _.Reference.Value.GetRows().ToList()
+                })
+                .Where(_ => _.Rows.Count == 1)
+                .Select(_ => new
+                {
+                    _.MergeCell,
+                    Row = _.Rows[0],
+                })
+                .Where(_ => _.Row >= RowStart)
+                .GroupBy(_ => _.Row, _ => _.MergeCell)
+                .ToDictionary(_ => _.Key, _ => _.ToList());
+
+
+            Templates.ConditionalFormatings = _worksheet.Elements<ConditionalFormatting>().ToList();
+            Templates.ConditionalFormatings.ForEach(_ => _.SequenceOfReferences.Items.Clear());
+
+            Templates.Rows = rows
+                .Where(_ => _.Key < 50)
+                .ToDictionary(_ => _.Key, _ => (Row)_.Value.CloneNode(true));
+
+            Templates.MergeCells = mergedCells
+                .Where(_ => _.Key >= RowStart)
+                .ToDictionary(
+                    _ => _.Key, 
+                    _ => _.Value
+                        .Select(item => item.Reference.Value.GetCols())
+                        .ToList()
+                    );
+
+            rows.ForEach(_ => _.Value.Remove());
+            mergedCells.ForEach(_ => _.Value.ForEach(x => x.Remove()));
+            _workbookPart.DeletePart(_workbookPart.CalculationChainPart);
 
             SetCellValue("H2", Report.DtStart);
             SetCellValue("J2", Report.DtEnd);
@@ -72,11 +100,14 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
         {
 
             First = 0,
-            Next = 1,
+            Mid = 1,
+            Last = 2,
+
+            _Skip = Last + 1,
         }
         enum RowSumType : int
         {
-            Prev = 0,
+            Mid = 0,
             Last = 1,
         }
 
@@ -102,6 +133,9 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
                 .Where(_ => _.MembersData.Count > 0)
                 .ToList();
 
+            if (data.Count == 0) return row;
+
+            var rowStart = row;
             for (var projIdx = 0; projIdx < data.Count; ++projIdx)
             {
                 var projectData = data[projIdx];
@@ -112,53 +146,65 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
                 for (var memIdx = 0; memIdx < projectData.MembersData.Count; ++memIdx)
                 {
                     var memberData = projectData.MembersData[memIdx];
-                    var dstRow = CopyRowData(row, projIdx == 0 && memIdx == 0 ? RowDataType.First : RowDataType.Next);
+                    var rowType = RowDataType.Mid;
+                    if (memIdx == 0)
+                        rowType = RowDataType.First;
+                    else if (memIdx == projectData.MembersData.Count - 1)
+                        rowType = RowDataType.Last;
+
+                    var dstRow = CopyRowData(row, rowType);
                     //SetOutlineLevel(dstRow, 2);
                     dstRow.OutlineLevel = 2;
                     dstRow.Collapsed = true;
                     dstRow.Hidden = true;
-                    SetCellValue(dstRow, ColumnNo.ProjNo, projectData.Name);
-                    SetCellValue(dstRow, ColumnNo.Employee, memberData.Name);
-                    SetCellValue(dstRow, ColumnNo.A, memberData.Data.A);
-                    SetCellValue(dstRow, ColumnNo.B, memberData.Data.B);
-                    SetCellFormula(dstRow, ColumnNo.C, Formula_C);
-                    SetCellFormula(dstRow, ColumnNo.D, Formula_D);
-                    SetCellValue(dstRow, ColumnNo.I, memberData.Data.I);
+                    SetCellValue(dstRow, LogicColumn.ProjNo, projectData.Name);
+                    SetCellValue(dstRow, LogicColumn.Employee, memberData.Name);
+                    SetCellValue(dstRow, LogicColumn.A, memberData.Data.A);
+                    SetCellValue(dstRow, LogicColumn.B, memberData.Data.B);
+                    SetCellFormula(dstRow, LogicColumn.C, Formula_C);
+                    SetCellFormula(dstRow, LogicColumn.D, Formula_D);
+                    SetCellValue(dstRow, LogicColumn.I, memberData.Data.I);
                     projectRowSum.Aggregate(memberData.Data);
                     row++;
                 }
+
                 {
-                    var dstRow = CopyRowSum(row, projIdx == data.Count - 1 ? RowSumType.Last : RowSumType.Prev);
+                    var dstRow = CopyRowSum(row, projIdx == data.Count - 1 ? RowSumType.Last : RowSumType.Mid);
                     //SetOutlineLevel(dstRow, 1);
                     dstRow.OutlineLevel = 1;
-                    SetCellValue(dstRow, ColumnNo.ProjNo, $"Total {projectData.Name}");
-                    SetCellValue(dstRow, ColumnNo.A, projectRowSum.A);
-                    SetCellValue(dstRow, ColumnNo.B, projectRowSum.B);
-                    SetCellFormula(dstRow, ColumnNo.C, Formula_C);
-                    SetCellFormula(dstRow, ColumnNo.D, Formula_D);
-                    SetCellValue(dstRow, ColumnNo.E, projectRowSum.E);
-                    SetCellValue(dstRow, ColumnNo.F, projectRowData.F);
-                    SetCellFormula(dstRow, ColumnNo.G, Formula_G);
-                    SetCellFormula(dstRow, ColumnNo.H, Formula_H);
-                    SetCellValue(dstRow, ColumnNo.I, projectRowSum.I);
-                    SetCellFormula(dstRow, ColumnNo.J, Formula_J);
-                    SetCellFormula(dstRow, ColumnNo.K, Formula_K);
-                    SetCellFormula(dstRow, ColumnNo.L, Formula_L);
+                    SetCellValue(dstRow, LogicColumn.ProjNo, $"Total {projectData.Name}");
+                    SetCellValue(dstRow, LogicColumn.A, projectRowSum.A);
+                    SetCellValue(dstRow, LogicColumn.B, projectRowSum.B);
+                    SetCellFormula(dstRow, LogicColumn.C, Formula_C);
+                    SetCellFormula(dstRow, LogicColumn.D, Formula_D);
+                    SetCellValue(dstRow, LogicColumn.E, projectRowSum.E);
+                    SetCellValue(dstRow, LogicColumn.F, projectRowData.F);
+                    SetCellFormula(dstRow, LogicColumn.G, Formula_G);
+                    SetCellFormula(dstRow, LogicColumn.H, Formula_H);
+                    SetCellValue(dstRow, LogicColumn.I, projectRowSum.I);
+                    SetCellFormula(dstRow, LogicColumn.J, Formula_J);
+                    SetCellFormula(dstRow, LogicColumn.K, Formula_K);
+                    SetCellFormula(dstRow, LogicColumn.L, Formula_L);
+                    Templates.AddConditionalFormatingTo(
+                        ExcelRange.MergeToRef(row, LogicColumn.H),
+                        ExcelRange.MergeToRef(row, LogicColumn.K)
+                        );
                     row++;
                 }
-            };
+            }
+            Templates.AddConditionalFormatingTo(
+                ExcelRange.MergeToRef(rowStart, LogicColumn.C, row-1, LogicColumn.C)
+                );
+
             return row;
         }
 
         private int CopyHeader(int row)
-            => CopyRow(TemplateRowStart, row, HeaderRowsCount).Count;
+            => CopyRow(TemplateRowStart, row, HeaderRowsCount, true).Count;
         private Row CopyRowData(int row, RowDataType type)
             => CopyRow((int)(TemplateRowStart + HeaderRowsCount + type), row, 1)[0];
         private Row CopyRowSum(int row, RowSumType type)
-            => CopyRow((int)(TemplateRowStart + HeaderRowsCount + 2 + type), row, 1)[0];
-
-        private void SetOutlineLevel(Row row, int level)
-            => row.SetAttribute(new DocumentFormat.OpenXml.OpenXmlAttribute("outlineLevel", string.Empty, level.ToString()));
+            => CopyRow(TemplateRowStart + HeaderRowsCount + (int)RowDataType._Skip + (int)type, row, 1)[0];
 
         private static string Formula_C => "MAX(D{0}-E{0}, 0)";
         private static string Formula_D => "IF(D{0}=0,0,ABS(E{0}/D{0}))";
@@ -178,7 +224,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
 
     public class ReportGenerator4Costs : ReportGeneratorBase
     {
-        protected override int TemplateRowStart => 22;
+        protected override int TemplateRowStart => 23;
         protected override RowReportProjDataModel GetData(RowProjDataModel data) => data.Costs;
         protected override RowReportDataModel GetData(RowDataModel data) => data.Costs;
     }
