@@ -4,6 +4,7 @@ using NLog;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 
 namespace BlueBit.ILF.Reports.ForProjectManagers
@@ -34,11 +35,19 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                 var pathInputDataXlsx = Path.Combine(pathInput, "data.xlsx");
                 var pathInputTemplateXlsm = Path.Combine(pathInput, "template.xlsm");
                 var pathOutput = Path.Combine(path, "output");
+                var pathSend = Path.Combine(path, "send");
 
                 Debug.Assert(Directory.Exists(pathInput));
                 Debug.Assert(Directory.Exists(pathOutput));
+                Debug.Assert(Directory.Exists(pathSend));
                 Debug.Assert(File.Exists(pathInputDataXlsx));
                 Debug.Assert(File.Exists(pathInputTemplateXlsm));
+
+                Directory
+                    .EnumerateFiles(pathSend)
+                    .ToList()
+                    .ForEach(_ => File.Delete(_));
+
 
                 var model = true //You can skip read from file...
                     ? ReadReportData(pathInputDataXlsx)
@@ -46,7 +55,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
 
 
                 var result = WriteReportData(model, pathInputTemplateXlsm, pathOutput);
-                SendReportData(result);
+                SendReportData(pathSend, result);
             });
 
 

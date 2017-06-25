@@ -2,10 +2,8 @@
 using BlueBit.ILF.Reports.ForProjectManagers.Generators;
 using BlueBit.ILF.Reports.ForProjectManagers.Model;
 using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Spreadsheet;
 using MoreLinq;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -24,7 +22,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
         }
 
 
-        private static List<(string id, string path, string title, string info, string addr)> WriteReportData(ReportModel model, string pathInputTemplateXlsm, string pathOutput)
+        private static List<SendData> WriteReportData(ReportModel model, string pathInputTemplateXlsm, string pathOutput)
             => _logger.OnEntryCall(() =>
                 model.Teams
                     .AsParallel()
@@ -35,7 +33,6 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
 
                         var path = Path.Combine(pathOutput, $"Raport.[{id}].xlsm");
                         File.Copy(pathInputTemplateXlsm, path);
-
                         var row = 0;
                         using (var document = SpreadsheetDocument.Open(path, true))
                         {
@@ -50,20 +47,19 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                                     generator.SetDocument(document);
                                     row = generator.Generate(row);
                                 });
-
                             document.Save();
                         }
 
                         _logger.Info($"WRITE END: #[{id}] - total rows #[{row}].");
-                        return (
-                            id,
-                            path,
-                            $"Raport dla kierownika pionu { team.DivisionLeader } za okres { model.DtStart.ToString("yyyyMMdd") } - { model.DtEnd.ToString("yyyyMMdd") }",
-                            $"W załączeniu raport za okres od { model.DtStart.ToString("yyyy-MM-dd") }  do { model.DtEnd.ToString("yyyy -MM-dd") } dla { team.DivisionLeader }."
+                        return new SendData() {
+                            ID = id,
+                            AttachmentPath = path,
+                            Title = $"Raport dla kierownika pionu { team.DivisionLeader } za okres { model.DtStart.ToString("yyyyMMdd") } - { model.DtEnd.ToString("yyyyMMdd") }",
+                            MsgBody = $"W załączeniu raport za okres od { model.DtStart.ToString("yyyy-MM-dd") }  do { model.DtEnd.ToString("yyyy -MM-dd") } dla { team.DivisionLeader }."
                                 + Environment.NewLine
                                 + "Proszę o akceptację zestawienia przy użyciu przycisku 'confirmed' w załączonym pliku oraz wpisywanie swoich uwag.",
-                                team.DivisionLeaderEmail
-                            );
+                            AddressTo = team.DivisionLeaderEmail,
+                            };
                     })
                     .ToList()
                 );
