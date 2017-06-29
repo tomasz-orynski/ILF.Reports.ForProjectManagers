@@ -73,13 +73,14 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
 
             var sheet = workbook.Worksheets[sheetName].CheckNotNull();
             _logger.Info($"READ BEG: [{sheetName}] from row #[{firstRow}] by column #[{byColumn}].");
+            var row = firstRow;
             for (;;)
             {
-                var value = sheet.GetValue<string>(firstRow, byColumn).NullTrim();
+                var value = sheet.GetValue<string>(row, byColumn).NullTrim();
                 if (string.IsNullOrEmpty(value)) break;
-                action(sheet, firstRow++, value);
+                action(sheet, row++, value);
             }
-            _logger.Info($"READ END: [{sheetName}] to row #[{firstRow}].");
+            _logger.Info($"READ END: [{sheetName}] from row #[{firstRow}] to row #[{row}] - count #[{row-firstRow}].");
         }
 
         private static void ReadReportData_Params(ReportModel model, ExcelWorkbook workbook)

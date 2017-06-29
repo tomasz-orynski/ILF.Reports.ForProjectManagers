@@ -31,7 +31,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                         var id = Guid.NewGuid().ToString();
                         _logger.Info($"WRITE BEG: #[{id}] for [{team.DivisionLeader}] - period [{model.DtStart} - {model.DtEnd}].");
 
-                        var path = Path.Combine(pathOutput, $"Raport.[{id}].xlsm");
+                        var path = Path.Combine(pathOutput, $"Raport.({id}).xlsm");
                         File.Copy(pathInputTemplateXlsm, path);
                         var row = 0;
                         using (var document = SpreadsheetDocument.Open(path, true))

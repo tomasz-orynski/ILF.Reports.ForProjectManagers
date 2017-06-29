@@ -1,6 +1,8 @@
 ﻿using BlueBit.ILF.Reports.ForProjectManagers.Model;
 using BlueBit.ILF.Reports.ForProjectManagers.Utils;
+using DocumentFormat.OpenXml.CustomProperties;
 using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.VariantTypes;
 using MoreLinq;
 using System.Linq;
 
@@ -55,8 +57,12 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
             SetCellValue("C4", Team.AreaName);
             SetCellValue("C5", Team.DivisionNameShort);
             SetCellValue("C6", Team.TeamName);
-            SetCellValue("C7", Team.TeamName);
+            SetCellValue("C7", Team.TeamLeader);
             SetCellValue("C8", Team.DivisionLeader);
+            var prop = _properties
+                .Elements<CustomDocumentProperty>()
+                .Single(_ => _.Name == "_SAVE_PATH_");
+            prop.VTLPWSTR = new VTLPWSTR(Team.SaveEmailPath);
 
             return RowStart;
         }
