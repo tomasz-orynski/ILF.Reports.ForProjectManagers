@@ -217,7 +217,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
         private static string Formula_G => "IF(H{0}=0,\"No plan at start\",I{0}/H{0})";
         private static string Formula_H => "MAX(H{0}-I{0}, 0)";
         private static string Formula_J => "I{0}+L{0}";
-        private static string Formula_K => "M{0}+H{0}";
+        private static string Formula_K => "M{0}-H{0}";
         private static string Formula_L => "IF(H{0}=0,\"No plan at start\",M{0}/H{0})";
     }
 
