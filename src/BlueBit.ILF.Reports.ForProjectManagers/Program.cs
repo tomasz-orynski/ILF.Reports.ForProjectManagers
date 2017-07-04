@@ -51,7 +51,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                 Directory
                     .EnumerateFiles(pathSend)
                     .ToList()
-                    .ForEach(_ => File.Delete(_));
+                    .ForEach(File.Delete);
 
 
                 var model = true //You can skip read from file...

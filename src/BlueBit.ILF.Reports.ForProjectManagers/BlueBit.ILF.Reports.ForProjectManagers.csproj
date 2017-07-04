@@ -167,6 +167,7 @@
     <Compile Include="Program.WriteData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\ExcelRange.cs" />
+    <Compile Include="Utils\KeyComparer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
