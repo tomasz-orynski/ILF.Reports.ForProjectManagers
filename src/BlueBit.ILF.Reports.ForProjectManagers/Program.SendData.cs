@@ -33,7 +33,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                     mailItem.Body = item.MsgBody;
                     var attachment = mailItem.Attachments.Add(tmpFile, DisplayName: item.Title);
                     attachment.DisplayName = item.Title;
-                    mailItem.Send();
+                    mailItem.Save();
 
                     File.Delete(tmpFile);
                     _logger.Info($"SEND END: #[{item.ID}].");
