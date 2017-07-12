@@ -32,8 +32,17 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
                 .ToDictionary(_ => _.Key, _ => _.ToList());
 
 
-            Templates.ConditionalFormatings = _worksheet.Elements<ConditionalFormatting>().ToList();
-            Templates.ConditionalFormatings.ForEach(_ => _.SequenceOfReferences.Items.Clear());
+            Templates.ConditionalFormatings = _worksheet.Elements<ConditionalFormatting>()
+                .Select(_ => new
+                {
+                    ConditionalFormatting = _,
+                    Col = _.SequenceOfReferences.Items.First().Value.SplitSingleToIdx().colIdx
+                })
+                .GroupBy(_ => _.Col, _=> _.ConditionalFormatting)
+                .ToDictionary(_ => _.Key, _ => _.ToList());
+            Templates.ConditionalFormatings
+                .SelectMany(_ => _.Value)
+                .ForEach(_ => _.SequenceOfReferences.Items.Clear());
 
             Templates.Rows = rows
                 .Where(_ => _.Key < 50)
@@ -191,16 +200,12 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
                     SetCellFormula(dstRow, LogicColumn.J, Formula_J);
                     SetCellFormula(dstRow, LogicColumn.K, Formula_K);
                     SetCellFormula(dstRow, LogicColumn.L, Formula_L);
-                    Templates.AddConditionalFormatingTo(
-                        ExcelRange.MergeToRef(row, LogicColumn.H),
-                        ExcelRange.MergeToRef(row, LogicColumn.K)
-                        );
+                    Templates.AddConditionalFormatingTo(row, LogicColumn.H);
+                    Templates.AddConditionalFormatingTo(row, LogicColumn.K);
                     row++;
                 }
             }
-            Templates.AddConditionalFormatingTo(
-                ExcelRange.MergeToRef(rowStart, LogicColumn.C, row-1, LogicColumn.C)
-                );
+            Templates.AddConditionalFormatingTo(rowStart, row - 1, LogicColumn.C);
 
             return row;
         }

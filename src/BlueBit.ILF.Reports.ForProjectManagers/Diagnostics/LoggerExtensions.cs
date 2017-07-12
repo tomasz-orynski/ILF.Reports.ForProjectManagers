@@ -22,6 +22,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Diagnostics
             catch (Exception e)
             {
                 logger.Error(e, "!!" + name);
+                throw;
             }
         }
         public static void EntryCall(Logger logger, Action action) => EntryCall(logger, action, action.Method.Name);

@@ -10,19 +10,29 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
     {
         public Dictionary<int, Row> Rows;
         public Dictionary<int, List<(string firstCol, string lastCol)>> MergeCells;
-        public List<ConditionalFormatting> ConditionalFormatings;
+        public Dictionary<int, List<ConditionalFormatting>> ConditionalFormatings;
 
-        public void AddConditionalFormatingTo(params string[] references)
+        public void AddConditionalFormatingTo(int row, int col)
         {
-            references.ForEach(r => {
-                ConditionalFormatings.ForEach(cf =>
+            ConditionalFormatings[col]
+                .ForEach(_ =>
                 {
-                    cf.SequenceOfReferences.Items.Add(new StringValue()
+                    _.SequenceOfReferences.Items.Add(new StringValue()
                     {
-                        Value = r,
+                        Value = ExcelRange.MergeToRef(row, col)
                     });
                 });
-            });
+        }
+        public void AddConditionalFormatingTo(int rowBeg, int rowEnd, int col)
+        {
+            ConditionalFormatings[col]
+                .ForEach(_ =>
+                {
+                    _.SequenceOfReferences.Items.Add(new StringValue()
+                    {
+                        Value = ExcelRange.MergeToRef(rowBeg, col, rowEnd, col)
+                    });
+                });
         }
 
         public IEnumerable<MergeCell> AddMergedCellsTo(int rowSrc, int rowDst)
