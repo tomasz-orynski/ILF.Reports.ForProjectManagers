@@ -1,0 +1,65 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns:m="http://schemas.microsoft.com/office/2004/12/omml" xmlns="http://www.w3.org/TR/REC-html40"><head><meta name=Generator content="Microsoft Word 15 (filtered medium)"><style><!--
+/* Font Definitions */
+@font-face
+    {font-family:"Cambria Math";
+    panose-1:2 4 5 3 5 4 6 3 2 4;}
+@font-face
+    {font-family:Calibri;
+    panose-1:2 15 5 2 2 2 4 3 2 4;}
+/* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+    {margin:0cm;
+    margin-bottom:.0001pt;
+    font-size:12.0pt;
+    font-family:"Times New Roman",serif;}
+a:link, span.MsoHyperlink
+    {mso-style-priority:99;
+    color:#0563C1;
+    text-decoration:underline;}
+a:visited, span.MsoHyperlinkFollowed
+    {mso-style-priority:99;
+    color:#954F72;
+    text-decoration:underline;}
+p.msonormal0, li.msonormal0, div.msonormal0
+    {mso-style-name:msonormal;
+    mso-margin-top-alt:auto;
+    margin-right:0cm;
+    mso-margin-bottom-alt:auto;
+    margin-left:0cm;
+    font-size:12.0pt;
+    font-family:"Times New Roman",serif;}
+span.Stylwiadomocie-mail18
+    {mso-style-type:personal-compose;
+    font-family:"Calibri",sans-serif;
+    color:windowtext;}
+.MsoChpDefault
+    {mso-style-type:export-only;
+    font-size:10.0pt;
+    font-family:"Calibri",sans-serif;
+    mso-fareast-language:EN-US;}
+@page WordSection1
+    {size:612.0pt 792.0pt;
+    margin:70.85pt 70.85pt 70.85pt 70.85pt;}
+div.WordSection1
+    {page:WordSection1;}
+--></style><!--[if gte mso 9]><xml>
+<o:shapedefaults v:ext="edit" spidmax="1026" />
+</xml><![endif]--><!--[if gte mso 9]><xml>
+<o:shapelayout v:ext="edit">
+<o:idmap v:ext="edit" data="1" />
+</o:shapelayout></xml><![endif]--></head>
+<body lang=PL link="#0563C1" vlink="#954F72">
+<div class=WordSection1>
+<p class=MsoNormal><span style='font-size:11.0pt;font-family:"Arial",sans-serif'><o:p></o:p></span></p>
+<p class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;line-height:150%'>
+<i><span style='font-family:"Arial",sans-serif'>Szanowni Państwo,</span></i><o:p></o:p></p><p class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;line-height:150%'>
+<i><span style='font-family:"Arial",sans-serif'>W załączeniu raport za okres od {model.DtStart} do {model.DtEnd}</span></i><span style='font-family:"Arial",sans-serif'> <i>dla {team.TeamName}</i>. </span><o:p></o:p></p><p class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;line-height:150%'>
+<i><span style='font-family:"Arial",sans-serif'>Proszę o potwierdzenie zapoznania się z zawartością raportu, w ciągu 2 dni roboczych, poprzez użycie przycisku &#8222;Confirmed&#8221; oraz wpisanie w formularzu ewentualnych uwag/podjętych działań.</span>
+</i><o:p></o:p></p><p class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;line-height:150%'>
+<i><span style='font-family:"Arial",sans-serif'>WAŻNE! </span></i><o:p></o:p></p><p class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><i><span style='font-family:"Arial",sans-serif'>Odesłanie potwierdzenia nie zainicjuje żadnej akcji oprócz archiwizacji! Obowiązkiem Kierownika Pionu jest przeanalizowanie raportu pod kątem poprawności planowania i uzgodnienie niezbędnych korekt z odpowiednimi Kierownikami Projektów oraz Kierownikami Zespołów.<o:p></o:p></span></i></p><p class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'>
+<i><span style='font-family:"Arial",sans-serif'></span>
+</i><span style='font-size:11.0pt;font-family:"Arial",sans-serif'><o:p></o:p></span></p>
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+</div>
+</body></html>
+

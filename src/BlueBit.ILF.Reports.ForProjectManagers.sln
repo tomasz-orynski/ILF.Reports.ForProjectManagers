@@ -1,9 +1,18 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.13
+VisualStudioVersion = 15.0.26430.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlueBit.ILF.Reports.ForProjectManagers", "BlueBit.ILF.Reports.ForProjectManagers\BlueBit.ILF.Reports.ForProjectManagers.csproj", "{810A92F6-901D-43D6-95A1-9EFAECBCE1F6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "data", "data", "{359D6D4B-241B-4FF0-88FD-BB45663C2542}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "input", "input", "{F40C8974-6082-4D17-B809-A37CC9D2E8FD}"
+	ProjectSection(SolutionItems) = preProject
+		..\data\input\data.xlsx = ..\data\input\data.xlsx
+		..\data\input\template.txt = ..\data\input\template.txt
+		..\data\input\template.xlsm = ..\data\input\template.xlsm
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +27,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F40C8974-6082-4D17-B809-A37CC9D2E8FD} = {359D6D4B-241B-4FF0-88FD-BB45663C2542}
 	EndGlobalSection
 EndGlobal

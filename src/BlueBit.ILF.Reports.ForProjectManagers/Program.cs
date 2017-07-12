@@ -34,6 +34,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                 var pathInput = Path.Combine(path, "input");
                 var pathInputDataXlsx = Path.Combine(pathInput, "data.xlsx");
                 var pathInputTemplateXlsm = Path.Combine(pathInput, "template.xlsm");
+                var pathInputTemplateTxt = Path.Combine(pathInput, "template.txt");
                 var pathOutput = Path.Combine(path, "output");
                 var pathSend = Path.Combine(path, "send");
 
@@ -47,18 +48,18 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                 Debug.Assert(Directory.Exists(pathSend));
                 Debug.Assert(File.Exists(pathInputDataXlsx));
                 Debug.Assert(File.Exists(pathInputTemplateXlsm));
+                Debug.Assert(File.Exists(pathInputTemplateTxt));
 
                 Directory
                     .EnumerateFiles(pathSend)
                     .ToList()
                     .ForEach(File.Delete);
 
-
                 var model = true //You can skip read from file...
                     ? ReadReportData(pathInputDataXlsx)
                     : MakeDummyReportModel();
 
-                var result = WriteReportData(model, pathInputTemplateXlsm, pathOutput);
+                var result = WriteReportData(model, pathInputTemplateXlsm, pathInputTemplateTxt, pathOutput);
                 SendReportData(pathSend, result);
             });
 
