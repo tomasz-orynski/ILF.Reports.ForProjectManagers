@@ -32,7 +32,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
                 .ToDictionary(_ => _.Key, _ => _.ToList());
 
 
-            Templates.ConditionalFormatings = _worksheet.Elements<ConditionalFormatting>()
+            Template.ConditionalFormatings = _worksheet.Elements<ConditionalFormatting>()
                 .Select(_ => new
                 {
                     ConditionalFormatting = _,
@@ -40,15 +40,15 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
                 })
                 .GroupBy(_ => _.Col, _=> _.ConditionalFormatting)
                 .ToDictionary(_ => _.Key, _ => _.ToList());
-            Templates.ConditionalFormatings
+            Template.ConditionalFormatings
                 .SelectMany(_ => _.Value)
                 .ForEach(_ => _.SequenceOfReferences.Items.Clear());
 
-            Templates.Rows = rows
+            Template.Rows = rows
                 .Where(_ => _.Key < 50)
                 .ToDictionary(_ => _.Key, _ => (Row)_.Value.CloneNode(true));
 
-            Templates.MergeCells = mergedCells
+            Template.MergeCells = mergedCells
                 .Where(_ => _.Key >= RowStart)
                 .ToDictionary(
                     _ => _.Key, 
@@ -68,11 +68,8 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
             SetCellValue("C6", Team.TeamName);
             SetCellValue("C7", Team.TeamLeader);
             SetCellValue("C8", Team.DivisionLeader);
-            var prop = _properties
-                .Elements<CustomDocumentProperty>()
-                .Single(_ => _.Name == "_SAVE_PATH_");
-            prop.VTLPWSTR = new VTLPWSTR(Team.SaveEmailPath);
-
+            SetDocProperty("_SAVE_PATH_", Team.SaveEmailPath);
+            SetDocProperty("_SAVE_NAME_", Template.Name);
             return RowStart;
         }
     }
@@ -200,12 +197,12 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
                     SetCellFormula(dstRow, LogicColumn.J, Formula_J);
                     SetCellFormula(dstRow, LogicColumn.K, Formula_K);
                     SetCellFormula(dstRow, LogicColumn.L, Formula_L);
-                    Templates.AddConditionalFormatingTo(row, LogicColumn.H);
-                    Templates.AddConditionalFormatingTo(row, LogicColumn.K);
+                    Template.AddConditionalFormatingTo(row, LogicColumn.H);
+                    Template.AddConditionalFormatingTo(row, LogicColumn.K);
                     row++;
                 }
             }
-            Templates.AddConditionalFormatingTo(rowStart, row - 1, LogicColumn.C);
+            Template.AddConditionalFormatingTo(rowStart, row - 1, LogicColumn.C);
 
             return row;
         }

@@ -155,7 +155,7 @@
     <Compile Include="Diagnostics\StringExtensions.cs" />
     <Compile Include="Generators\Generator.cs" />
     <Compile Include="Generators\ReportGenerator.cs" />
-    <Compile Include="Generators\Template.cs" />
+    <Compile Include="Generators\TemplateModel.cs" />
     <Compile Include="Model\RowDataModel.cs" />
     <Compile Include="Model\ReportModel.cs" />
     <Compile Include="Model\RowReportDataModel.cs" />

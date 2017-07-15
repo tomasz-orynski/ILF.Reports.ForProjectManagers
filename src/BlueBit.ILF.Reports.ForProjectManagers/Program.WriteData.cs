@@ -34,16 +34,19 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                         _logger.Info($"WRITE BEG: #[{id}] for [{team.DivisionLeader}] - period [{model.DtStart} - {model.DtEnd}].");
 
                         var path = Path.Combine(pathOutput, $"Raport.({id}).xlsm");
+                        var name = $"Raport dla kierownika pionu { team.DivisionLeader } - { team.TeamName } za okres { model.DtStart.ToString("yyyyMMdd") } - { model.DtEnd.ToString("yyyyMMdd") }";
                         File.Copy(pathInputTemplateXlsm, path);
                         var row = 0;
                         using (var document = SpreadsheetDocument.Open(path, true))
                         {
-
-                            var templates = new Template();
+                            var templates = new TemplateModel()
+                            {
+                                Name = name,
+                            };
                             GetGenerators()
                                 .ForEach(generator =>
                                 {
-                                    generator.Templates = templates;
+                                    generator.Template = templates;
                                     generator.Report = model;
                                     generator.Team = team;
                                     generator.SetDocument(document);
@@ -57,7 +60,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                         {
                             ID = id,
                             AttachmentPath = path,
-                            Title = $"Raport dla kierownika pionu { team.DivisionLeader } - { team.TeamName } za okres { model.DtStart.ToString("yyyyMMdd") } - { model.DtEnd.ToString("yyyyMMdd") }",
+                            Title = name,
                             MsgBody = bodyTemplate
                                 .Replace("{model.DtStart}", model.DtStart.ToString("dd.MM.yyyy"))
                                 .Replace("{model.DtEnd}", model.DtEnd.ToString("dd.MM.yyyy"))

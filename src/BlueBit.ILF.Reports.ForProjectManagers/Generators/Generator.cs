@@ -4,6 +4,7 @@ using BlueBit.ILF.Reports.ForProjectManagers.Utils;
 using DocumentFormat.OpenXml.CustomProperties;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.VariantTypes;
 using MoreLinq;
 using System;
 using System.Collections;
@@ -43,7 +44,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
         }
 
 
-        public Template Templates { get; set; }
+        public TemplateModel Template { get; set; }
         public ReportModel Report { get; set; }
         public TeamModel Team { get; set; }
 
@@ -82,7 +83,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
             {
                 var srcIdx = rowSrc + rowIdx;
                 var dstIdx = rowDst + rowIdx;
-                var dst = (Row)Templates.Rows[srcIdx].CloneNode(true); 
+                var dst = (Row)Template.Rows[srcIdx].CloneNode(true); 
                 dst.RowIndex.Value = (uint)dstIdx;
                 dst.Elements<Cell>()
                     .ForEach(cell =>
@@ -93,7 +94,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
 
                 _sheetData.Append(dst);
                 if (handleMergeCells)
-                    Templates.AddMergedCellsTo(srcIdx, dstIdx)
+                    Template.AddMergedCellsTo(srcIdx, dstIdx)
                         .ForEach(_ => _mergeCells.AppendChild(_));
 
                 list.Add(dst);
@@ -158,5 +159,12 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
             };
         }
 
+        protected void SetDocProperty(string name, string value)
+        {
+            var prop = _properties
+                .Elements<CustomDocumentProperty>()
+                .Single(_ => _.Name == name);
+            prop.VTLPWSTR = new VTLPWSTR(value);
+        }
     }
 }
