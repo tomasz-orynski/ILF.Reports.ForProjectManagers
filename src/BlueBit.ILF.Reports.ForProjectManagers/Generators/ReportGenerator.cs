@@ -189,7 +189,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
                     SetCellValue(dstRow, LogicColumn.B, projectRowSum.B);
                     SetCellFormula(dstRow, LogicColumn.C, Formula_C);
                     SetCellFormula(dstRow, LogicColumn.D, Formula_D);
-                    SetCellValue(dstRow, LogicColumn.E, projectRowSum.E);
+                    SetCellValue(dstRow, LogicColumn.E, projectRowData.E);
                     SetCellValue(dstRow, LogicColumn.F, projectRowData.F);
                     SetCellFormula(dstRow, LogicColumn.G, Formula_G);
                     SetCellFormula(dstRow, LogicColumn.H, Formula_H);

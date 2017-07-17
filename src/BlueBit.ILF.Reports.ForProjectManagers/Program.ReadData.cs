@@ -153,7 +153,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                 OnReadSheet(workbook, "PMT02_MH_at start", 3, 1, (sheet, row, employee) => {
                     var division = sheet.GetValue<string>(row, 2).NullTrim();
                     var project = sheet.GetValue<string>(row, 6).NullTrim();
-                    model._RowsDivProjEmpl.IfExistsValue((division, project, employee), rowData =>
+                    model._RowsDivProj.IfExistsValue((division, project), rowData =>
                     {
                         rowData.Hours.E += sheet.GetValue<decimal?>(row, 7) ?? 0m;
                     });
@@ -166,7 +166,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                 OnReadSheet(workbook, "PMT02_Cost_at start", 3, 1, (sheet, row, employee) => {
                     var division = sheet.GetValue<string>(row, 2).NullTrim();
                     var project = sheet.GetValue<string>(row, 6).NullTrim();
-                    model._RowsDivProjEmpl.IfExistsValue((division, project, employee), rowData =>
+                    model._RowsDivProj.IfExistsValue((division, project), rowData =>
                     {
                         rowData.Costs.E += sheet.GetValue<decimal?>(row, 7) ?? 0m;
                     });
