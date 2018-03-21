@@ -1,6 +1,8 @@
 ﻿using BlueBit.ILF.Reports.ForProjectManagers.Model;
 using BlueBit.ILF.Reports.ForProjectManagers.Utils;
+using DocumentFormat.OpenXml.CustomProperties;
 using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.VariantTypes;
 using MoreLinq;
 using System.Linq;
 
@@ -30,14 +32,23 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
                 .ToDictionary(_ => _.Key, _ => _.ToList());
 
 
-            Templates.ConditionalFormatings = _worksheet.Elements<ConditionalFormatting>().ToList();
-            Templates.ConditionalFormatings.ForEach(_ => _.SequenceOfReferences.Items.Clear());
+            Template.ConditionalFormatings = _worksheet.Elements<ConditionalFormatting>()
+                .Select(_ => new
+                {
+                    ConditionalFormatting = _,
+                    Col = _.SequenceOfReferences.Items.First().Value.SplitSingleToIdx().colIdx
+                })
+                .GroupBy(_ => _.Col, _=> _.ConditionalFormatting)
+                .ToDictionary(_ => _.Key, _ => _.ToList());
+            Template.ConditionalFormatings
+                .SelectMany(_ => _.Value)
+                .ForEach(_ => _.SequenceOfReferences.Items.Clear());
 
-            Templates.Rows = rows
+            Template.Rows = rows
                 .Where(_ => _.Key < 50)
                 .ToDictionary(_ => _.Key, _ => (Row)_.Value.CloneNode(true));
 
-            Templates.MergeCells = mergedCells
+            Template.MergeCells = mergedCells
                 .Where(_ => _.Key >= RowStart)
                 .ToDictionary(
                     _ => _.Key, 
@@ -55,9 +66,10 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
             SetCellValue("C4", Team.AreaName);
             SetCellValue("C5", Team.DivisionNameShort);
             SetCellValue("C6", Team.TeamName);
-            SetCellValue("C7", Team.TeamName);
+            SetCellValue("C7", Team.TeamLeader);
             SetCellValue("C8", Team.DivisionLeader);
-
+            SetDocProperty("_SAVE_PATH_", Team.SaveEmailPath);
+            SetDocProperty("_SAVE_NAME_", Template.Name);
             return RowStart;
         }
     }
@@ -177,7 +189,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
                     SetCellValue(dstRow, LogicColumn.B, projectRowSum.B);
                     SetCellFormula(dstRow, LogicColumn.C, Formula_C);
                     SetCellFormula(dstRow, LogicColumn.D, Formula_D);
-                    SetCellValue(dstRow, LogicColumn.E, projectRowSum.E);
+                    SetCellValue(dstRow, LogicColumn.E, projectRowData.E);
                     SetCellValue(dstRow, LogicColumn.F, projectRowData.F);
                     SetCellFormula(dstRow, LogicColumn.G, Formula_G);
                     SetCellFormula(dstRow, LogicColumn.H, Formula_H);
@@ -185,16 +197,12 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
                     SetCellFormula(dstRow, LogicColumn.J, Formula_J);
                     SetCellFormula(dstRow, LogicColumn.K, Formula_K);
                     SetCellFormula(dstRow, LogicColumn.L, Formula_L);
-                    Templates.AddConditionalFormatingTo(
-                        ExcelRange.MergeToRef(row, LogicColumn.H),
-                        ExcelRange.MergeToRef(row, LogicColumn.K)
-                        );
+                    Template.AddConditionalFormatingTo(row, LogicColumn.H);
+                    Template.AddConditionalFormatingTo(row, LogicColumn.K);
                     row++;
                 }
             }
-            Templates.AddConditionalFormatingTo(
-                ExcelRange.MergeToRef(rowStart, LogicColumn.C, row-1, LogicColumn.C)
-                );
+            Template.AddConditionalFormatingTo(rowStart, row - 1, LogicColumn.C);
 
             return row;
         }
@@ -211,7 +219,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
         private static string Formula_G => "IF(H{0}=0,\"No plan at start\",I{0}/H{0})";
         private static string Formula_H => "MAX(H{0}-I{0}, 0)";
         private static string Formula_J => "I{0}+L{0}";
-        private static string Formula_K => "M{0}+H{0}";
+        private static string Formula_K => "M{0}-H{0}";
         private static string Formula_L => "IF(H{0}=0,\"No plan at start\",M{0}/H{0})";
     }
 

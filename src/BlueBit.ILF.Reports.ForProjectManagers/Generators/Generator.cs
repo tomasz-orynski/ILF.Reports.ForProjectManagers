@@ -1,12 +1,15 @@
 ﻿using BlueBit.ILF.Reports.ForProjectManagers.Diagnostics;
 using BlueBit.ILF.Reports.ForProjectManagers.Model;
 using BlueBit.ILF.Reports.ForProjectManagers.Utils;
+using DocumentFormat.OpenXml.CustomProperties;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.VariantTypes;
 using MoreLinq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -41,7 +44,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
         }
 
 
-        public Template Templates { get; set; }
+        public TemplateModel Template { get; set; }
         public ReportModel Report { get; set; }
         public TeamModel Team { get; set; }
 
@@ -50,16 +53,17 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
         public abstract int Generate(int row);
 
         protected SpreadsheetDocument _document;
+        protected Properties _properties;
         protected WorkbookPart _workbookPart;
         protected Workbook _workbook;
         protected Worksheet _worksheet;
         protected SheetData _sheetData;
         protected MergeCells _mergeCells;
-        //protected CalculationChain _calculationChain;
 
         public void SetDocument(SpreadsheetDocument document)
         {
             _document = document;
+            _properties = _document.CustomFilePropertiesPart.Properties;
             _workbookPart = _document.WorkbookPart;
             _workbook = _workbookPart.Workbook;
 
@@ -79,7 +83,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
             {
                 var srcIdx = rowSrc + rowIdx;
                 var dstIdx = rowDst + rowIdx;
-                var dst = (Row)Templates.Rows[srcIdx].CloneNode(true); 
+                var dst = (Row)Template.Rows[srcIdx].CloneNode(true); 
                 dst.RowIndex.Value = (uint)dstIdx;
                 dst.Elements<Cell>()
                     .ForEach(cell =>
@@ -90,7 +94,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
 
                 _sheetData.Append(dst);
                 if (handleMergeCells)
-                    Templates.AddMergedCellsTo(srcIdx, dstIdx)
+                    Template.AddMergedCellsTo(srcIdx, dstIdx)
                         .ForEach(_ => _mergeCells.AppendChild(_));
 
                 list.Add(dst);
@@ -101,48 +105,47 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
             => _sheetData.Elements<Row>()
                 .Single(_ => _.RowIndex.Value == row);
 
+        private Cell GetCell(string cellRef)
+            => _sheetData.Descendants<Cell>()
+                .Single(_ => _.CellReference.Value == cellRef);
+        private Cell GetCell(Row row, string colRef)
+            => row
+                .Elements<Cell>()
+                .Single(_ => _.CellReference.Value.SplitSingleToRef().colRef == colRef);
+
+        private Cell GetCell(Row row, int col)
+            => GetCell(row, col.GetColumnRef());
         private Cell GetCell(int row, string colRef)
-            => GetRow(row)
-            .Elements<Cell>()
-            .Single(_ => _.CellReference.Value == colRef);
+            => GetCell(GetRow(row), colRef);
         private Cell GetCell(int row, int col)
             => GetCell(row, col.GetColumnRef());
 
-
         protected void SetCellValue(Row row, int col, string value)
+            => SetCellValue(GetCell(row, col), value);
+        protected void SetCellValue(string cellRef, string value)
+            => SetCellValue(GetCell(cellRef), value);
+        private void SetCellValue(Cell cell, string value)
         {
-            var cell = row.Descendants<Cell>()
-                .Single(_ => _.CellReference.Value.SplitSingleToRef().colRef.GetColumnIdx() == col);
             cell.DataType = CellValues.InlineString;
             cell.InlineString = new InlineString(new Text { Text = value });
         }
-        protected void SetCellValue(string cellReference, string value)
+
+        protected void SetCellValue(string cellRef, DateTime value)
+            => SetCellValue(GetCell(cellRef), value);
+        protected void SetCellValue(Cell cell, DateTime value)
         {
-            var cell = _sheetData.Descendants<Cell>()
-                .Single(_ => _.CellReference.Value == cellReference);
-            cell.DataType = CellValues.InlineString;
-            cell.InlineString = new InlineString(new Text { Text = value });
-        }
-        protected void SetCellValue(string cellReference, DateTime value)
-        {
-            var cell = _sheetData.Descendants<Cell>()
-                .Single(_ => _.CellReference.Value == cellReference);
-            //cell.DataType = CellValues.Date;
-            cell.CellValue = new CellValue(value.ToOADate().ToString());
-        }
-        protected void SetCellValue(string cellReference, Decimal value)
-        {
-            var cell = _sheetData.Descendants<Cell>()
-                .Single(_ => _.CellReference.Value == cellReference);
             cell.DataType = CellValues.Number;
-            cell.CellValue = new CellValue(value.ToString());
+            cell.CellValue = new CellValue(value.ToOADate().ToString(CultureInfo.InvariantCulture));
         }
+
         protected void SetCellValue(Row row, int col, Decimal value)
+            => SetCellValue(GetCell(row, col), value);
+        protected void SetCellValue(string cellRef, Decimal value)
+            => SetCellValue(GetCell(cellRef), value);
+        protected void SetCellValue(Cell cell, Decimal value)
         {
-            var cell = row.Descendants<Cell>()
-                .Single(_ => _.CellReference.Value.SplitSingleToRef().colRef.GetColumnIdx() == col);
             cell.DataType = CellValues.Number;
-            cell.CellValue = new CellValue(value.ToString());
+            cell.CellValue = new CellValue(value.ToString(CultureInfo.InvariantCulture));
         }
 
         protected void SetCellFormula(Row row, int col, string formula)
@@ -156,5 +159,12 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Generators
             };
         }
 
+        protected void SetDocProperty(string name, string value)
+        {
+            var prop = _properties
+                .Elements<CustomDocumentProperty>()
+                .Single(_ => _.Name == name);
+            prop.VTLPWSTR = new VTLPWSTR(value);
+        }
     }
 }

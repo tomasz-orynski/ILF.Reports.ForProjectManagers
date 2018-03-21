@@ -13,10 +13,6 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Model
         /// </summary>
         public decimal B { get; set; }
         /// <summary>
-        /// H: Discipline
-        /// </summary>
-        public decimal E { get; set; }
-        /// <summary>
         /// L: Estimate
         /// </summary>
         public decimal I { get; set; }
@@ -28,13 +24,16 @@ namespace BlueBit.ILF.Reports.ForProjectManagers.Model
             Contract.Assert(other != null);
             A += other.A;
             B += other.B;
-            E += other.E;
             I += other.I;
         }
     }
 
     public class RowReportProjDataModel
     {
+        /// <summary>
+        /// H: Discipline Total Budget
+        /// </summary>
+        public decimal E { get; set; }
         /// <summary>
         /// I: Total MH
         /// </summary>

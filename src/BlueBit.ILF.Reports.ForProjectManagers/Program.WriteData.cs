@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace BlueBit.ILF.Reports.ForProjectManagers
 {
@@ -22,26 +23,30 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
         }
 
 
-        private static List<SendData> WriteReportData(ReportModel model, string pathInputTemplateXlsm, string pathOutput)
-            => _logger.OnEntryCall(() =>
-                model.Teams
+        private static List<SendData> WriteReportData(ReportModel model, string pathInputTemplateXlsm, string pathInputTemplateTxt, string pathOutput)
+            => _logger.OnEntryCall(() => {
+                var bodyTemplate = File.ReadAllText(pathInputTemplateTxt, Encoding.UTF8);
+                return model.Teams
                     .AsParallel()
                     .Select(team =>
                     {
                         var id = Guid.NewGuid().ToString();
                         _logger.Info($"WRITE BEG: #[{id}] for [{team.DivisionLeader}] - period [{model.DtStart} - {model.DtEnd}].");
 
-                        var path = Path.Combine(pathOutput, $"Raport.[{id}].xlsm");
+                        var path = Path.Combine(pathOutput, $"Raport.({id}).xlsm");
+                        var name = $"Raport dla kierownika pionu { team.DivisionLeader } - { team.TeamName } za okres { model.DtStart.ToString("yyyyMMdd") } - { model.DtEnd.ToString("yyyyMMdd") }";
                         File.Copy(pathInputTemplateXlsm, path);
                         var row = 0;
                         using (var document = SpreadsheetDocument.Open(path, true))
                         {
-
-                            var templates = new Template();
+                            var templates = new TemplateModel()
+                            {
+                                Name = name,
+                            };
                             GetGenerators()
                                 .ForEach(generator =>
                                 {
-                                    generator.Templates = templates;
+                                    generator.Template = templates;
                                     generator.Report = model;
                                     generator.Team = team;
                                     generator.SetDocument(document);
@@ -51,18 +56,21 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                         }
 
                         _logger.Info($"WRITE END: #[{id}] - total rows #[{row}].");
-                        return new SendData() {
+                        return new SendData()
+                        {
                             ID = id,
                             AttachmentPath = path,
-                            Title = $"Raport dla kierownika pionu { team.DivisionLeader } za okres { model.DtStart.ToString("yyyyMMdd") } - { model.DtEnd.ToString("yyyyMMdd") }",
-                            MsgBody = $"W załączeniu raport za okres od { model.DtStart.ToString("yyyy-MM-dd") }  do { model.DtEnd.ToString("yyyy -MM-dd") } dla { team.DivisionLeader }."
-                                + Environment.NewLine
-                                + "Proszę o akceptację zestawienia przy użyciu przycisku 'confirmed' w załączonym pliku oraz wpisywanie swoich uwag.",
+                            Title = name,
+                            MsgBody = bodyTemplate
+                                .Replace("{model.DtStart}", model.DtStart.ToString("dd.MM.yyyy"))
+                                .Replace("{model.DtEnd}", model.DtEnd.ToString("dd.MM.yyyy"))
+                                .Replace("{team.DivisionLeader}", team.DivisionLeader)
+                                .Replace("{team.TeamName}", team.TeamName),
                             AddressTo = team.DivisionLeaderEmail,
-                            };
+                        };
                     })
-                    .ToList()
-                );
+                    .ToList();
+                });
 
 
     }

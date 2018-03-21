@@ -30,10 +30,10 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
                     var mailItem = (Outlook.MailItem)app.CreateItem(Outlook.OlItemType.olMailItem);
                     mailItem.Subject = item.Title;
                     mailItem.To = item.AddressTo;
-                    mailItem.Body = item.MsgBody;
+                    mailItem.HTMLBody = item.MsgBody;
                     var attachment = mailItem.Attachments.Add(tmpFile, DisplayName: item.Title);
                     attachment.DisplayName = item.Title;
-                    mailItem.Send();
+                    mailItem.Save();
 
                     File.Delete(tmpFile);
                     _logger.Info($"SEND END: #[{item.ID}].");
