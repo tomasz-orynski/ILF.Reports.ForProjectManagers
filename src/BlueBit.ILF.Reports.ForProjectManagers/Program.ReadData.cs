@@ -196,7 +196,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
             {
                 var dtiStart = model.GetDtiStart();
                 var dtiEnd = model.GetDtiEnd();
-                OnReadSheet(workbook, "Planned_Actual_Comparison", 6, 4, (sheet, row, employee) => {
+                OnReadSheet(workbook, "Planned_Actual_Comparison", 3, 4, (sheet, row, employee) => {
                     var division = sheet.GetValue<string>(row, 12).NullTrim();
                     var project = sheet.GetValue<string>(row, 1).NullTrim();
 
@@ -215,7 +215,7 @@ namespace BlueBit.ILF.Reports.ForProjectManagers
             {
                 var dtiStart = model.GetDtiStart();
                 var dtiEnd = model.GetDtiEnd();
-                OnReadSheet(workbook, "Planned_Actual_Compare Estimate", 6, 4, (sheet, row, employee) => {
+                OnReadSheet(workbook, "Planned_Actual_Compare Estimate", 3, 4, (sheet, row, employee) => {
                     var division = sheet.GetValue<string>(row, 12).NullTrim();
                     var project = sheet.GetValue<string>(row, 1).NullTrim();
 
